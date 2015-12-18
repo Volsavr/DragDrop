@@ -23,7 +23,8 @@ namespace DragDrop
         private Transform _originalTransform;
         private bool _isTouchActivation;
         private Point _previousTouchPosition;
-        private bool _isDraggGesture;
+        private bool _isDraggTouchGesture;
+        private Point _firstTouchPoint;
         #endregion
 
         #region Constructor
@@ -157,6 +158,7 @@ namespace DragDrop
         {
             //mouse events
             groupElement.MouseMove += groupElement_MouseMove;
+            groupElement.MouseLeftButtonDown += groupElement_MouseLeftButtonDown;
 
             //touch events
             groupElement.StylusSystemGesture += groupElement_StylusSystemGesture;
@@ -164,6 +166,7 @@ namespace DragDrop
             groupElement.TouchDown += groupElement_TouchDown;
             groupElement.TouchUp += groupElement_TouchUp;
         }
+
 
         /// <summary>
         /// Unregisters the drag source handler for the given group element
@@ -268,18 +271,29 @@ namespace DragDrop
         #endregion
 
         #region DragDrop event handlers
+        void groupElement_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            Debug.WriteLine("groupElement_MouseLeftButtonDown");
+
+            //set point of first touch
+            _firstTouchPoint = Mouse.GetPosition(_parentDragDropContainer);
+        }
+
         private void groupElement_TouchDown(object sender, TouchEventArgs e)
         {
             Debug.WriteLine("groupElement_TouchDown");
             //Note: Little hack to improve drag from list with PaningMode
             e.Handled = true;
-            _isDraggGesture = true;
+            _isDraggTouchGesture = true;
+
+            //set point of first touch
+            _firstTouchPoint = e.GetTouchPoint(_parentDragDropContainer).Position;
         }
 
         private void groupElement_TouchUp(object sender, TouchEventArgs e)
         {
             Debug.WriteLine("groupElement_TouchUp");
-            _isDraggGesture = false;
+            _isDraggTouchGesture = false;
 
             if (_draggedElement == null)
                 return;
@@ -289,16 +303,41 @@ namespace DragDrop
 
         private void groupElement_MouseMove(object sender, MouseEventArgs e)
         {
-            if (e.LeftButton == MouseButtonState.Pressed)
+            if (_isDraggTouchGesture)
+                return;
+
+            if (e.LeftButton != MouseButtonState.Pressed)
+                return;
+
+            var currentPoint = e.GetPosition(_parentDragDropContainer);
+
+            var vector1 = MathHelper.GetVectorPoint(_firstTouchPoint,
+                new Point(_firstTouchPoint.X + 100, _firstTouchPoint.Y));
+            var vector2 = MathHelper.GetVectorPoint(_firstTouchPoint, currentPoint);
+            var cosOfAngle = MathHelper.GetCosOfAngleBetweenVectors(vector1, vector2);
+            var angle = MathHelper.RadiansToGradus(Math.Acos(cosOfAngle));
+
+            if (currentPoint.Y < _firstTouchPoint.Y)
+                angle = 360 - angle;
+
+            var minAngle = DragDropContainer.GetMinDragAngle(sender as UIElement);
+            var maxAngle = DragDropContainer.GetMaxDragAngle(sender as UIElement);
+
+            Debug.WriteLine("Angle:" + angle);
+            Debug.WriteLine("MinAngle:" + minAngle);
+            Debug.WriteLine("MaxAngle:" + maxAngle);
+
+            if (angle < minAngle || angle > maxAngle)
+                return;
+
+            Debug.WriteLine("Gesture: Mouse Drag");
+            if (TrySetDraggedElement(sender as UIElement))
             {
-                Debug.WriteLine("Gesture: Mouse Drag");
-                if (TrySetDraggedElement(sender as UIElement))
-                {
-                    Debug.WriteLine("DragElement: " + sender.ToString());
-                    StartDragDrop(false);
-                    e.Handled = true;
-                }
+                Debug.WriteLine("DragElement: " + sender.ToString());
+                StartDragDrop(false);
+                e.Handled = true;
             }
+
         }
 
         private void groupElement_StylusSystemGesture(object sender, StylusSystemGestureEventArgs e)
@@ -308,12 +347,34 @@ namespace DragDrop
                 case SystemGesture.Drag:
                     Debug.WriteLine("Gesture: Touch Drag");
 
-                    if (_isDraggGesture && TrySetDraggedElement(sender as UIElement))
+                    if (!_isDraggTouchGesture)
+                        return;
+
+                    var currentPoint = e.GetPosition(_parentDragDropContainer);
+                    var vector1 = MathHelper.GetVectorPoint(_firstTouchPoint, new Point(_firstTouchPoint.X + 100, _firstTouchPoint.Y));
+                    var vector2 = MathHelper.GetVectorPoint(_firstTouchPoint, currentPoint);
+                    var cosOfAngle = MathHelper.GetCosOfAngleBetweenVectors(vector1, vector2);
+                    var angle = MathHelper.RadiansToGradus(Math.Acos(cosOfAngle));
+
+                    if (currentPoint.Y < _firstTouchPoint.Y)
+                        angle = 360 - angle;
+
+                    var minAngle = DragDropContainer.GetMinDragAngle(sender as UIElement);
+                    var maxAngle = DragDropContainer.GetMaxDragAngle(sender as UIElement);
+
+                    Debug.WriteLine("Angle:" + angle);
+                    Debug.WriteLine("MinAngle:" + minAngle);
+                    Debug.WriteLine("MaxAngle:" + maxAngle);
+
+                    if (angle < minAngle || angle > maxAngle)
+                        return;
+
+                    if (TrySetDraggedElement(sender as UIElement))
                     {
                         Debug.WriteLine("DragElement: " + sender.ToString());
-                        StartDragDrop(true);      
+                        StartDragDrop(true);
+                        e.Handled = true;
                     }
-                    e.Handled = true;
                     break;
 
                 case SystemGesture.Tap:
@@ -450,8 +511,11 @@ namespace DragDrop
 
         private void EndDragDrop()
         {
-            Debug.WriteLine("Drag End");
+            if (!_isDraggingActive)
+                return;
 
+            Debug.WriteLine("Drag End");
+            
             ProceedDropOnCurrentPosition();
             InternalChildren.Remove(_dragThumb);
 

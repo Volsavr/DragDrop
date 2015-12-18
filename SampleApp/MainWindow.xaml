@@ -12,6 +12,8 @@
                      dragDrop:DragDropContainer.DragDropGroupName="dragDropGroup1"
                      dragDrop:DragDropContainer.IsDraggable="True"
                      dragDrop:DragDropContainer.IsDropTarget="False"
+                     dragDrop:DragDropContainer.MinDragAngle="135.0"
+                     dragDrop:DragDropContainer.MaxDragAngle="225.0"
                      dragDrop:DragDropContainer.SourceDropCommandParameter="{Binding}">
                 <i:Interaction.Triggers>
                     <sampleApp:ActionsTrigger>

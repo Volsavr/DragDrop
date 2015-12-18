@@ -51,6 +51,7 @@
     <Compile Include="DropCommandExecutedDelegate.cs" />
     <Compile Include="DropCommandParameter.cs" />
     <Compile Include="IDragDropGroup.cs" />
+    <Compile Include="MathHelper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

@@ -122,6 +122,26 @@ namespace DragDrop
         {
             obj.SetValue(ParentDragDropContainerProperty, value);
         }
+
+        static public readonly DependencyProperty MinDragAngleProperty = DependencyProperty.RegisterAttached("MinDragAngle", typeof(double), typeof(DragDropContainer), new UIPropertyMetadata(0.0));
+        static public double GetMinDragAngle(DependencyObject obj)
+        {
+            return (double)obj.GetValue(MinDragAngleProperty);
+        }
+        static public void SetMinDragAngle(DependencyObject obj, double value)
+        {
+            obj.SetValue(MinDragAngleProperty, value);
+        }
+
+        static public readonly DependencyProperty MaxDragAngleProperty = DependencyProperty.RegisterAttached("MaxDragAngle", typeof(double), typeof(DragDropContainer), new UIPropertyMetadata(360.0));
+        static public double GetMaxDragAngle(DependencyObject obj)
+        {
+            return (double)obj.GetValue(MaxDragAngleProperty);
+        }
+        static public void SetMaxDragAngle(DependencyObject obj, double value)
+        {
+            obj.SetValue(MaxDragAngleProperty, value);
+        }
         #endregion attached properties
 
         #region Static Methods
