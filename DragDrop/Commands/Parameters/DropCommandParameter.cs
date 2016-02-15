@@ -1,11 +1,11 @@
 ﻿using System.Windows;
 
-namespace DragDrop
+namespace DragDrop.Commands.Parameters
 {
     /// <summary>
     /// Represents a drop command parameter
     /// </summary>
-    public class DropCommandParameter
+    public class DropCommandParameter : SourceActionTargetCommandParameter
     {
         #region Constructors
         /// <summary>
@@ -82,52 +82,14 @@ namespace DragDrop
         /// Offset
         /// </param>
         public DropCommandParameter(UIElement dropSource, UIElement dropTarget, object dropSourceParameter, object dropTargetParameter, Point? offset)
+              : base(dropSource, dropTarget, dropSourceParameter, dropTargetParameter)
         {
-            DropSource = dropSource;
-            DropTarget = dropTarget;
-            DropSourceParameter = dropSourceParameter;
-            DropTargetParameter = dropTargetParameter;
-            Offset = offset;
+           Offset = offset;
         }
         
         #endregion
 
         #region Properties
-        /// <summary>
-        /// Gets the drop source
-        /// </summary>
-        public UIElement DropSource
-        {
-            get;
-            private set;
-        }
-
-        /// <summary>
-        /// Gets the drop target
-        /// </summary>
-        public UIElement DropTarget
-        {
-            get;
-            private set;
-        }
-
-        /// <summary>
-        /// Gets the drop source parameter
-        /// </summary>
-        public object DropSourceParameter
-        {
-            get;
-            private set;
-        }
-
-        /// <summary>
-        /// Gets the drop target parameter
-        /// </summary>
-        public object DropTargetParameter
-        {
-            get;
-            private set;
-        }
 
         /// <summary>
         /// Gets the offset

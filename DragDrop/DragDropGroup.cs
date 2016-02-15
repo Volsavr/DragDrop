@@ -9,6 +9,8 @@ using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
+using DragDrop.Commands;
+using DragDrop.Commands.Parameters;
 
 namespace DragDrop
 {
@@ -28,7 +30,7 @@ namespace DragDrop
         private bool _isDraggTouchGesture;
         private Point _firstTouchPoint;
         #endregion
-
+        
         #region Constructor
         internal DragDropGroup(DragDropContainer parentDragDropContainer)
         {
@@ -53,7 +55,6 @@ namespace DragDrop
                 }
             });
         }
-
         #endregion
 
         #region IDragDropGroup
@@ -810,15 +811,52 @@ namespace DragDrop
         private void UpdateDragDropTargets()
         {
             UIElement dropTarget = FindDropTargetAtCurrentPosition();
+
             if (dropTarget != null)
             {
-                DragDropContainer.SetIsActiveDropTarget(dropTarget, true);
+                bool previousValue = DragDropContainer.GetIsActiveDropTarget(dropTarget);
+
+                if (!previousValue && _draggedElement!=null)
+                {
+                    SourceReachTargetCommand sourceReachTargetCommand =
+                        DragDropContainer.GetSourceReachTargetCommand(dropTarget);
+                    object sourceReachTargetCommandParameter =
+                        DragDropContainer.GetSourceReachCommandParameter(_draggedElement);
+                   
+                    if (sourceReachTargetCommand != null)
+                    {
+                        sourceReachTargetCommand.Execute(this,
+                            new SourceReachTargetCommandParameter(_draggedElement, dropTarget,
+                                sourceReachTargetCommandParameter, null));
+                    }
+
+                    DragDropContainer.SetIsActiveDropTarget(dropTarget, true);
+                }
+
             }
+
             foreach (UIElement groupElement in _groupElements)
             {
                 if (groupElement != dropTarget)
                 {
-                    DragDropContainer.SetIsActiveDropTarget(groupElement, false);
+                    bool previousValue = DragDropContainer.GetIsActiveDropTarget(groupElement);
+
+                    if (previousValue && _draggedElement != null)
+                    {
+                        SourceLeaveTargetCommand sourceLeaveTargetCommand =
+                        DragDropContainer.GetSourceLeaveTargetCommand(groupElement);
+                        object sourceLeaveTargetCommandParameter =
+                            DragDropContainer.GetSourceLeaveCommandParameter(_draggedElement);
+
+                        if (sourceLeaveTargetCommand != null)
+                        {
+                            sourceLeaveTargetCommand.Execute(this,
+                                new SourceLeaveTargetCommandParameter(_draggedElement, dropTarget,
+                                    sourceLeaveTargetCommandParameter, null));
+                        }
+
+                        DragDropContainer.SetIsActiveDropTarget(groupElement, false);
+                    }
                 }
             }
         }

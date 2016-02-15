@@ -1,6 +1,7 @@
 ﻿using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using DragDrop.Commands;
 
 namespace DragDrop
 {
@@ -80,6 +81,46 @@ namespace DragDrop
             obj.SetValue(TargetDropCommandParameterProperty, value);
         }
 
+        static public readonly DependencyProperty SourceReachCommandParameterProperty = DependencyProperty.RegisterAttached("SourceReachCommandParameter", typeof(object), typeof(DragDropContainer), new UIPropertyMetadata(null));
+        static public object GetSourceReachCommandParameter(DependencyObject obj)
+        {
+            return (object)obj.GetValue(SourceReachCommandParameterProperty);
+        }
+        static public void SetSourceReachCommandParameter(DependencyObject obj, object value)
+        {
+            obj.SetValue(SourceReachCommandParameterProperty, value);
+        }
+
+        static public readonly DependencyProperty SourceLeaveCommandParameterProperty = DependencyProperty.RegisterAttached("SourceLeaveCommandParameter", typeof(object), typeof(DragDropContainer), new UIPropertyMetadata(null));
+        static public object GetSourceLeaveCommandParameter(DependencyObject obj)
+        {
+            return (object)obj.GetValue(SourceLeaveCommandParameterProperty);
+        }
+        static public void SetSourceLeaveCommandParameter(DependencyObject obj, object value)
+        {
+            obj.SetValue(SourceLeaveCommandParameterProperty, value);
+        }
+
+        static public readonly DependencyProperty SourceLeaveTargetCommandProperty = DependencyProperty.RegisterAttached("SourceLeaveTargetCommand", typeof(SourceLeaveTargetCommand), typeof(DragDropContainer), new UIPropertyMetadata(null));
+        static public SourceLeaveTargetCommand GetSourceLeaveTargetCommand(DependencyObject obj)
+        {
+            return (SourceLeaveTargetCommand)obj.GetValue(SourceLeaveTargetCommandProperty);
+        }
+        static public void SetSourceLeaveTargetCommand(DependencyObject obj, SourceLeaveTargetCommand value)
+        {
+            obj.SetValue(SourceLeaveTargetCommandProperty, value);
+        }
+
+        static public readonly DependencyProperty SourceReachTargetCommandProperty = DependencyProperty.RegisterAttached("SourceReachTargetCommand", typeof(SourceReachTargetCommand), typeof(DragDropContainer), new UIPropertyMetadata(null));
+        static public SourceReachTargetCommand GetSourceReachTargetCommand(DependencyObject obj)
+        {
+            return (SourceReachTargetCommand)obj.GetValue(SourceReachTargetCommandProperty);
+        }
+        static public void SetSourceReachTargetCommand(DependencyObject obj, SourceReachTargetCommand value)
+        {
+            obj.SetValue(SourceReachTargetCommandProperty, value);
+        }
+
         static private readonly DependencyPropertyKey IsDraggedKey = DependencyProperty.RegisterAttachedReadOnly("IsDragged", typeof(bool), typeof(DragDropContainer), new PropertyMetadata(false));
         static public readonly DependencyProperty IsDraggedProperty = IsDraggedKey.DependencyProperty;
         static public bool GetIsDragged(DependencyObject obj)
@@ -108,7 +149,7 @@ namespace DragDrop
         {
             return (bool)obj.GetValue(IsActiveDropTargetProperty);
         }
-        static internal void SetIsActiveDropTarget(DependencyObject obj, bool value)
+        static public void SetIsActiveDropTarget(DependencyObject obj, bool value)
         {
             obj.SetValue(IsActiveDropTargetKey, value);
         }
@@ -331,7 +372,6 @@ namespace DragDrop
                 return FindParent<T>(visualParent);
             }
         }
-        
         #endregion
     }
 }

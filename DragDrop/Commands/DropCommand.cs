@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Windows.Input;
+using DragDrop.Commands.Delegates;
+using DragDrop.Commands.Parameters;
 
-namespace DragDrop
+namespace DragDrop.Commands
 {
     /// <summary>
     /// Represents a drop command

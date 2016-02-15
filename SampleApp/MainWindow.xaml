@@ -48,6 +48,8 @@
                      dragDrop:DragDropContainer.DragDropGroupName="dragDropGroup1"
                      dragDrop:DragDropContainer.IsDraggable="False"
                      dragDrop:DragDropContainer.IsDropTarget="True"
+                     dragDrop:DragDropContainer.SourceLeaveTargetCommand="{Binding SourceLeaveCommand}"
+                     dragDrop:DragDropContainer.SourceReachTargetCommand="{Binding SourceReachCommand}"
                      dragDrop:DragDropContainer.TargetDropCommand="{Binding ItemDropCommand}"/>
                     <ControlTemplate.Triggers>
                         <Trigger Property="dragDrop:DragDropContainer.IsActiveDropTarget" Value="True">

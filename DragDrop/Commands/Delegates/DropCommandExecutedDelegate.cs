@@ -1,5 +1,7 @@
 ﻿
-namespace DragDrop
+using DragDrop.Commands.Parameters;
+
+namespace DragDrop.Commands.Delegates
 {
     /// <summary>
     /// Drop command executed delegate
