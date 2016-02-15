@@ -2,11 +2,13 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
 
 namespace DragDrop
 {
@@ -405,6 +407,8 @@ namespace DragDrop
                 ((_dragThumb.RenderTransform as TransformGroup).Children[0] as TranslateTransform).Y =
                     currentPositionMouse.Y - draggedFrameworkElement.ActualHeight / 2;
             }
+
+            UpdateDragDropTargets();
             e.Handled = true;
 
         }
@@ -509,16 +513,13 @@ namespace DragDrop
         }
 
 
-        private void EndDragDrop()
+        private async void EndDragDrop()
         {
             if (!_isDraggingActive)
                 return;
 
             Debug.WriteLine("Drag End");
-            
-            ProceedDropOnCurrentPosition();
-            InternalChildren.Remove(_dragThumb);
-
+           
             if (_isTouchActivation)
             {
                 _parentDragDropContainer.TouchUp -= _parentDragDropContainer_TouchUp;
@@ -532,7 +533,11 @@ namespace DragDrop
 
             _parentDragDropContainer.MouseLeftButtonUp -= _parentDragDropContainer_MouseLeftButtonUp;
 
-            _draggedElement.RenderTransform = _originalTransform;
+
+            await ProceedDropOnCurrentPosition();
+           
+            InternalChildren.Remove(_dragThumb);
+
             foreach (UIElement groupElement in _groupElements)
             {
                 DragDropContainer.SetIsDragActive(groupElement, false);
@@ -574,7 +579,7 @@ namespace DragDrop
             }
         }
 
-        private void ProceedDropOnCurrentPosition()
+        private async Task ProceedDropOnCurrentPosition()
         {
             UIElement targetElement = FindDropTargetAtCurrentPosition();
 
@@ -586,6 +591,7 @@ namespace DragDrop
                 object sourceDropCommandParameter = DragDropContainer.GetSourceDropCommandParameter(_draggedElement);
                 DropCommand targetDropCommand = DragDropContainer.GetTargetDropCommand(targetElement);
                 object targetDropCommandParameter = DragDropContainer.GetTargetDropCommandParameter(targetElement);
+
                 if (sourceDropCommand != null)
                 {
                     sourceDropCommand.Execute(this, new DropCommandParameter(_draggedElement, targetElement, sourceDropCommandParameter, targetDropCommandParameter, offset));
@@ -605,7 +611,52 @@ namespace DragDrop
                 {
                     sourceDropCommand.Execute(this, new DropCommandParameter(_draggedElement, null, sourceDropCommandParameter, null, offset));
                 }
+
+                await EndDraggingAnimationAsync();
             }
+        }
+
+        private async Task EndDraggingAnimationAsync()
+        {
+            var translate_x = new DoubleAnimation()
+            {
+                From = ((_dragThumb.RenderTransform as TransformGroup).Children[0] as TranslateTransform).X,
+                To = _firstTouchPoint.X - _dragThumb.ActualWidth / 2,
+                Duration = TimeSpan.FromSeconds(0.2)
+            };
+            var translate_y = new DoubleAnimation()
+            {
+                From = ((_dragThumb.RenderTransform as TransformGroup).Children[0] as TranslateTransform).Y,
+                To = _firstTouchPoint.Y - _dragThumb.ActualHeight / 2,
+                Duration = TimeSpan.FromSeconds(0.2)
+            };
+
+            ((_dragThumb.RenderTransform as TransformGroup).Children[0] as TranslateTransform).BeginAnimation(TranslateTransform.XProperty, translate_x);
+            ((_dragThumb.RenderTransform as TransformGroup).Children[0] as TranslateTransform).BeginAnimation(TranslateTransform.YProperty, translate_y);
+
+            await Task.Delay(200);
+        }
+
+        private async Task DropAnimationAsync()
+        {
+            var scale_x = new DoubleAnimation()
+            {
+                From = _dragThumb.ActualWidth,
+                To = 0,
+                Duration = TimeSpan.FromSeconds(0.5)
+            };
+
+            var scale_y = new DoubleAnimation()
+            {
+                From = _dragThumb.ActualHeight,
+                To = 0,
+                Duration = TimeSpan.FromSeconds(0.5),
+            };
+
+            ((_dragThumb.RenderTransform as TransformGroup).Children[1] as ScaleTransform).BeginAnimation(ScaleTransform.ScaleXProperty, scale_x);
+            ((_dragThumb.RenderTransform as TransformGroup).Children[1] as ScaleTransform).BeginAnimation(ScaleTransform.ScaleYProperty, scale_y);
+
+            await Task.Delay(500);
         }
 
         /// <summary>
@@ -734,6 +785,7 @@ namespace DragDrop
                 _dragThumb.RenderTransform = new TransformGroup();
                 (_dragThumb.RenderTransform as TransformGroup).Children.Add(new TranslateTransform(_relativeDragPoint.X,
                 _relativeDragPoint.Y));
+                (_dragThumb.RenderTransform as TransformGroup).Children.Add(new ScaleTransform());
             }
         }
 

@@ -41,11 +41,23 @@
             <RowDefinition Height="100"/>
         </dragDrop:DragDropContainer.RowDefinitions>
 
-        <Ellipse DataContext="{Binding Targer}" Height="200" Width="200" Fill="{Binding Color}"
-                 dragDrop:DragDropContainer.DragDropGroupName="dragDropGroup1"
-                 dragDrop:DragDropContainer.IsDraggable="False"
-                 dragDrop:DragDropContainer.IsDropTarget="True"
-                 dragDrop:DragDropContainer.TargetDropCommand="{Binding ItemDropCommand}"/>
+        <ContentControl Height="200" Width="200" BorderBrush="Aqua" DataContext="{Binding Targer}">
+            <ContentControl.Template>
+                <ControlTemplate>
+                    <Ellipse  Name="TargetEllipse" StrokeThickness="2" Stroke="{TemplateBinding BorderBrush}" Fill="{Binding Color}"
+                     dragDrop:DragDropContainer.DragDropGroupName="dragDropGroup1"
+                     dragDrop:DragDropContainer.IsDraggable="False"
+                     dragDrop:DragDropContainer.IsDropTarget="True"
+                     dragDrop:DragDropContainer.TargetDropCommand="{Binding ItemDropCommand}"/>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="dragDrop:DragDropContainer.IsActiveDropTarget" Value="True">
+                            <Setter Property="BorderBrush" Value="Orange" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </ContentControl.Template>
+        </ContentControl>
+       
 
         <StackPanel Orientation="Horizontal" Grid.Column="0" Grid.Row="1">
             <Rectangle  DataContext="{Binding Item1}"
