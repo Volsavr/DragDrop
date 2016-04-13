@@ -535,7 +535,9 @@ namespace DragDrop
 
 
             await ProceedDropOnCurrentPosition();
-           
+
+            _dragThumb.Child = null;
+            _dragThumb.Background = null;
             InternalChildren.Remove(_dragThumb);
             DragDropContainer.SetIsDragged(_draggedElement, false);
             _draggedElement = null;
@@ -848,19 +850,43 @@ namespace DragDrop
 
                         Point targetElementCenter = new Point(targetElementStartX + (targetElementWidth / 2d), targetElementStartY + (targetElementHeight / 2d));
 
-                        if (CollisionHelper.CheckPointCircleCollision(draggedElementCenter, targetElementCenter,
-                            Math.Max(targetElementWidth, targetElementHeight)/2.0))
+                        var collisionMode = DragDropContainer.GetTargetCollisionMode(groupElement);
+
+                        switch (collisionMode)
                         {
-                            double offsetX =
-                                Math.Abs(draggedElementCenter.X -
-                                         (topLeftTargetElementCorner.X + (groupFrameworkElement.ActualWidth/2d)));
-                            double offsetY =
-                                Math.Abs(draggedElementCenter.Y -
-                                         (topLeftTargetElementCorner.Y + (groupFrameworkElement.ActualHeight/2d)));
-                            targets.Add(
-                                new KeyValuePair<double, FrameworkElement>(
-                                    (Math.Sqrt((offsetX*offsetX) + (offsetY*offsetY))), groupFrameworkElement));
+                            case DestinationCollisionMode.Circle:
+                                if (CollisionHelper.CheckPointCircleCollision(draggedElementCenter, targetElementCenter,
+                           Math.Min(targetElementWidth, targetElementHeight) / 2.0))
+                                {
+                                    double offsetX =
+                                        Math.Abs(draggedElementCenter.X -
+                                                 (topLeftTargetElementCorner.X + (groupFrameworkElement.ActualWidth / 2d)));
+                                    double offsetY =
+                                        Math.Abs(draggedElementCenter.Y -
+                                                 (topLeftTargetElementCorner.Y + (groupFrameworkElement.ActualHeight / 2d)));
+                                    targets.Add(
+                                        new KeyValuePair<double, FrameworkElement>(
+                                            (Math.Sqrt((offsetX * offsetX) + (offsetY * offsetY))), groupFrameworkElement));
+                                }
+                                break;
+
+                            case DestinationCollisionMode.Rectangle:
+                                if (CollisionHelper.CheckPointRectCollision(draggedElementCenter, new Rect(targetElementStartX, targetElementStartY,targetElementWidth,targetElementHeight)))
+                                {
+                                    double offsetX =
+                                        Math.Abs(draggedElementCenter.X -
+                                                 (topLeftTargetElementCorner.X + (groupFrameworkElement.ActualWidth / 2d)));
+                                    double offsetY =
+                                        Math.Abs(draggedElementCenter.Y -
+                                                 (topLeftTargetElementCorner.Y + (groupFrameworkElement.ActualHeight / 2d)));
+                                    targets.Add(
+                                        new KeyValuePair<double, FrameworkElement>(
+                                            (Math.Sqrt((offsetX * offsetX) + (offsetY * offsetY))), groupFrameworkElement));
+                                }
+                                break;
                         }
+
+                       
                     }
                 }
             }
@@ -890,35 +916,68 @@ namespace DragDrop
         /// </summary>
         private void InitializeDragThumb()
         {
-            FrameworkElement draggedFrameworkElement = _draggedElement as FrameworkElement;
-            if (draggedFrameworkElement != null)
+           /* Binding heightBinding = new Binding();
+            heightBinding.Source = _draggedElement;
+            heightBinding.Path = new PropertyPath("ActualHeight");
+            _dragThumb.SetBinding(Border.HeightProperty, heightBinding);
+         
+            Binding widthBinding = new Binding();
+            widthBinding.Source = _draggedElement;
+            widthBinding.Path = new PropertyPath("ActualWidth");
+            _dragThumb.SetBinding(Border.WidthProperty, widthBinding);
+            _dragThumb.SnapsToDevicePixels = true;*/
+
+            //using template
+            var template = DragDropContainer.GetDragThumbTemplate(_draggedElement);
+            var context = DragDropContainer.GetDragThumbContext(_draggedElement);
+
+            if (template != null && context != null)
             {
+                ContentControl control = new ContentControl();
+                control.ContentTemplate = template;
+                control.Content = context;
+
+                _dragThumb.Child = control;
+
                 Binding heightBinding = new Binding();
-                heightBinding.Source = _draggedElement;
-                heightBinding.Path = new PropertyPath("ActualHeight");
+                heightBinding.Source = control;
+                heightBinding.Path = new PropertyPath("Height");
                 _dragThumb.SetBinding(Border.HeightProperty, heightBinding);
+
                 Binding widthBinding = new Binding();
-                widthBinding.Source = _draggedElement;
-                widthBinding.Path = new PropertyPath("ActualWidth");
+                widthBinding.Source = control;
+                widthBinding.Path = new PropertyPath("Width");
                 _dragThumb.SetBinding(Border.WidthProperty, widthBinding);
                 _dragThumb.SnapsToDevicePixels = true;
-
-                _dragThumb.Background = new VisualBrush(_draggedElement)
-                {
-                    AlignmentX = AlignmentX.Center,
-                    AlignmentY = AlignmentY.Center,
-                    Stretch = Stretch.None
-                };
-
-                _dragThumb.Opacity = 0.7;
-                _dragThumb.Cursor = draggedFrameworkElement.Cursor;
-                _relativeDragPoint = Mouse.GetPosition(_parentDragDropContainer);
-
-                _dragThumb.RenderTransform = new TransformGroup();
-                (_dragThumb.RenderTransform as TransformGroup).Children.Add(new TranslateTransform(_relativeDragPoint.X,
-                _relativeDragPoint.Y));
-                (_dragThumb.RenderTransform as TransformGroup).Children.Add(new ScaleTransform());
             }
+            else
+            {
+                //using brush
+                FrameworkElement draggedFrameworkElement = _draggedElement as FrameworkElement;
+                if (draggedFrameworkElement != null)
+                {
+                    _dragThumb.Height = draggedFrameworkElement.ActualHeight;
+                    _dragThumb.Width = draggedFrameworkElement.ActualWidth;
+
+                    _dragThumb.Background = new VisualBrush(_draggedElement)
+                    {
+                        AlignmentX = AlignmentX.Center,
+                        AlignmentY = AlignmentY.Center,
+                        Stretch = Stretch.None
+                    };
+
+                    _dragThumb.Cursor = draggedFrameworkElement.Cursor;
+                }
+            }
+
+            _dragThumb.SnapsToDevicePixels = true;
+            _dragThumb.Opacity = 0.7;
+            _relativeDragPoint = Mouse.GetPosition(_parentDragDropContainer);
+
+            _dragThumb.RenderTransform = new TransformGroup();
+            (_dragThumb.RenderTransform as TransformGroup).Children.Add(new TranslateTransform(_relativeDragPoint.X,
+            _relativeDragPoint.Y));
+            (_dragThumb.RenderTransform as TransformGroup).Children.Add(new ScaleTransform());
         }
 
         /// <summary>

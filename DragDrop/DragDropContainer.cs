@@ -42,6 +42,36 @@ namespace DragDrop
             obj.SetValue(IsDropTargetProperty, value);
         }
 
+        static public readonly DependencyProperty DragThumbTemplateProperty = DependencyProperty.RegisterAttached("DragThumbTemplate", typeof(DataTemplate), typeof(DragDropContainer), new UIPropertyMetadata(null));
+        static public DataTemplate GetDragThumbTemplate(DependencyObject obj)
+        {
+            return (DataTemplate)obj.GetValue(DragThumbTemplateProperty);
+        }
+        static public void SetDragThumbTemplate(DependencyObject obj, DataTemplate value)
+        {
+            obj.SetValue(DragThumbTemplateProperty, value);
+        }
+
+        static public readonly DependencyProperty DragThumbContextProperty = DependencyProperty.RegisterAttached("DragThumbContext", typeof(object), typeof(DragDropContainer), new UIPropertyMetadata(null));
+        static public object GetDragThumbContext(DependencyObject obj)
+        {
+            return (object)obj.GetValue(DragThumbContextProperty);
+        }
+        static public void SetDragThumbContext(DependencyObject obj, object value)
+        {
+            obj.SetValue(SourceDropCommandParameterProperty, value);
+        }
+
+        static public readonly DependencyProperty TargetCollisionModeProperty = DependencyProperty.RegisterAttached("TargetCollisionMode", typeof(DestinationCollisionMode), typeof(DragDropContainer), new UIPropertyMetadata(DestinationCollisionMode.Circle));
+        static public DestinationCollisionMode GetTargetCollisionMode(DependencyObject obj)
+        {
+            return (DestinationCollisionMode)obj.GetValue(TargetCollisionModeProperty);
+        }
+        static public void SetTargetCollisionMode(DependencyObject obj, DestinationCollisionMode value)
+        {
+            obj.SetValue(TargetCollisionModeProperty, value);
+        }
+
         static public readonly DependencyProperty SourceDropCommandProperty = DependencyProperty.RegisterAttached("SourceDropCommand", typeof(DropCommand), typeof(DragDropContainer), new UIPropertyMetadata(null));
         static public DropCommand GetSourceDropCommand(DependencyObject obj)
         {
