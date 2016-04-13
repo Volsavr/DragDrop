@@ -1,6 +1,7 @@
 ﻿using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using System.Windows.Shapes;
 using DragDrop.Commands;
 
 namespace DragDrop
@@ -212,12 +213,37 @@ namespace DragDrop
                     groupElement.Unloaded -= new RoutedEventHandler(groupElement_Unloaded);
                     groupElement.Loaded -= new RoutedEventHandler(groupElement_Loaded);
                     groupElement.Unloaded += new RoutedEventHandler(groupElement_Unloaded);
+                    groupElement.IsVisibleChanged -= groupElement_IsVisibleChanged;
+                    groupElement.IsVisibleChanged += groupElement_IsVisibleChanged;
                 }
                 else
                 {
                     groupElement.Unloaded -= new RoutedEventHandler(groupElement_Unloaded);
                     groupElement.Loaded -= new RoutedEventHandler(groupElement_Loaded);
+                    groupElement.IsVisibleChanged -= groupElement_IsVisibleChanged;
                     groupElement.Loaded += new RoutedEventHandler(groupElement_Loaded);
+                }
+            }
+        }
+
+        static void groupElement_IsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)
+        {
+            FrameworkElement groupElement = sender as FrameworkElement;
+            if (groupElement != null)
+            {
+                DragDropContainer dragDropContainer = FindParent<DragDropContainer>(groupElement);
+                if (dragDropContainer != null)
+                {
+                    if (groupElement.IsVisible)
+                    {
+                        SetParentDragDropContainer(groupElement, dragDropContainer);
+                        dragDropContainer.OnDragDropGroupNameChanged(groupElement, null,
+                            GetDragDropGroupName(groupElement));
+                    }
+                    else
+                    {
+                        dragDropContainer.OnDragDropGroupNameChanged(groupElement, GetDragDropGroupName(groupElement), null);
+                    }
                 }
             }
         }
@@ -245,6 +271,8 @@ namespace DragDrop
                 groupElement.Unloaded -= new RoutedEventHandler(groupElement_Unloaded);
                 groupElement.Loaded -= new RoutedEventHandler(groupElement_Loaded);
                 groupElement.Unloaded += new RoutedEventHandler(groupElement_Unloaded);
+                groupElement.IsVisibleChanged -= groupElement_IsVisibleChanged;
+                groupElement.IsVisibleChanged += groupElement_IsVisibleChanged;
             }
         }
 
@@ -260,6 +288,7 @@ namespace DragDrop
         static private void groupElement_Unloaded(object sender, RoutedEventArgs args)
         {
             FrameworkElement groupElement = sender as FrameworkElement;
+
             if (groupElement != null)
             {
                 DragDropContainer dragDropContainer = FindParent<DragDropContainer>(groupElement);
@@ -269,6 +298,7 @@ namespace DragDrop
                 }
                 groupElement.Unloaded -= new RoutedEventHandler(groupElement_Unloaded);
                 groupElement.Loaded -= new RoutedEventHandler(groupElement_Loaded);
+                groupElement.IsVisibleChanged -= groupElement_IsVisibleChanged;
                 groupElement.Loaded += new RoutedEventHandler(groupElement_Loaded);
             }
         }
