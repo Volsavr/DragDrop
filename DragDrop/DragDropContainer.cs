@@ -1,5 +1,6 @@
 ﻿using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Shapes;
 using DragDrop.Commands;
@@ -71,6 +72,27 @@ namespace DragDrop
         {
             obj.SetValue(TargetCollisionModeProperty, value);
         }
+
+        static public readonly DependencyProperty SourceDragStartedCommandProperty = DependencyProperty.RegisterAttached("SourceDragStartedCommand", typeof(ICommand), typeof(DragDropContainer), new UIPropertyMetadata(null));
+        static public ICommand GetSourceDragStartedCommand(DependencyObject obj)
+        {
+            return (ICommand)obj.GetValue(SourceDragStartedCommandProperty);
+        }
+        static public void SetSourceDragStartedCommand(DependencyObject obj, ICommand value)
+        {
+            obj.SetValue(SourceDragStartedCommandProperty, value);
+        }
+
+        static public readonly DependencyProperty SourceDragFinishedCommandProperty = DependencyProperty.RegisterAttached("SourceDragFinishedCommand", typeof(ICommand), typeof(DragDropContainer), new UIPropertyMetadata(null));
+        static public ICommand GetSourceDragFinishedCommand(DependencyObject obj)
+        {
+            return (ICommand)obj.GetValue(SourceDragFinishedCommandProperty);
+        }
+        static public void SetSourceDragFinishedCommand(DependencyObject obj, ICommand value)
+        {
+            obj.SetValue(SourceDragFinishedCommandProperty, value);
+        }
+
 
         static public readonly DependencyProperty SourceDropCommandProperty = DependencyProperty.RegisterAttached("SourceDropCommand", typeof(DropCommand), typeof(DragDropContainer), new UIPropertyMetadata(null));
         static public DropCommand GetSourceDropCommand(DependencyObject obj)

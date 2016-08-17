@@ -30,6 +30,8 @@ namespace DragDrop
         private Point _previousTouchPosition;
         private bool _isDraggTouchGesture;
         private Point _firstTouchPoint;
+        private UIElement _firstTouchUIElement;
+        private const double DragDelta = 15.0;
         #endregion
         
         #region Constructor
@@ -279,7 +281,13 @@ namespace DragDrop
             Debug.WriteLine("groupElement_MouseLeftButtonDown");
 
             //set point of first touch
-            _firstTouchPoint = Mouse.GetPosition(_parentDragDropContainer);
+            _firstTouchPoint = e.GetPosition(_parentDragDropContainer);
+
+            //set uielement
+            _firstTouchUIElement = sender as UIElement;
+
+            //log start point
+            Debug.WriteLine("StartPosition: X= "+ _firstTouchPoint.X + ", Y= " + _firstTouchPoint.Y);
         }
 
         private void groupElement_TouchDown(object sender, TouchEventArgs e)
@@ -291,6 +299,12 @@ namespace DragDrop
 
             //set point of first touch
             _firstTouchPoint = e.GetTouchPoint(_parentDragDropContainer).Position;
+            
+            //set uielement
+            _firstTouchUIElement = sender as UIElement;
+           
+            //log start point
+            Debug.WriteLine("StartPosition: X= " + _firstTouchPoint.X + ", Y= " + _firstTouchPoint.Y);
         }
 
         private void groupElement_TouchUp(object sender, TouchEventArgs e)
@@ -312,7 +326,21 @@ namespace DragDrop
             if (e.LeftButton != MouseButtonState.Pressed)
                 return;
 
+            if (_firstTouchPoint.X == 0.0 && _firstTouchPoint.Y == 0.0)
+                return;
+
+            if (_firstTouchUIElement != sender)
+                return;
+
             var currentPoint = e.GetPosition(_parentDragDropContainer);
+
+            Debug.WriteLine("DragActivationPosition: X= " + currentPoint.X + ", Y= " + currentPoint.Y);
+
+            var xDelta = Math.Max(currentPoint.X, _firstTouchPoint.X) - Math.Min(currentPoint.X, _firstTouchPoint.X);
+            var yDelta = Math.Max(currentPoint.Y, _firstTouchPoint.Y) - Math.Min(currentPoint.Y, _firstTouchPoint.Y);
+
+            if (xDelta <= DragDelta && yDelta <= DragDelta)
+               return;
 
             var vector1 = MathHelper.GetVectorPoint(_firstTouchPoint,
                 new Point(_firstTouchPoint.X + 100, _firstTouchPoint.Y));
@@ -323,8 +351,8 @@ namespace DragDrop
             if (currentPoint.Y < _firstTouchPoint.Y)
                 angle = 360 - angle;
 
-            var minAngle = DragDropContainer.GetMinDragAngle(sender as UIElement);
-            var maxAngle = DragDropContainer.GetMaxDragAngle(sender as UIElement);
+            var minAngle = DragDropContainer.GetMinDragAngle(_firstTouchUIElement);
+            var maxAngle = DragDropContainer.GetMaxDragAngle(_firstTouchUIElement);
 
             Debug.WriteLine("Angle:" + angle);
             Debug.WriteLine("MinAngle:" + minAngle);
@@ -334,17 +362,19 @@ namespace DragDrop
                 return;
 
             Debug.WriteLine("Gesture: Mouse Drag");
-            if (TrySetDraggedElement(sender as UIElement))
+            if (TrySetDraggedElement(_firstTouchUIElement))
             {
-                Debug.WriteLine("DragElement: " + sender.ToString());
+                Debug.WriteLine("DragElement: " + _firstTouchUIElement.ToString());
                 StartDragDrop(false);
                 e.Handled = true;
             }
-
         }
 
         private void groupElement_StylusSystemGesture(object sender, StylusSystemGestureEventArgs e)
         {
+            if (_firstTouchUIElement != sender)
+                return;
+
             switch (e.SystemGesture)
             {
                 case SystemGesture.Drag:
@@ -354,6 +384,9 @@ namespace DragDrop
                         return;
 
                     var currentPoint = e.GetPosition(_parentDragDropContainer);
+
+                    Debug.WriteLine("DragActivationPosition: X= " + currentPoint.X + ", Y= " + currentPoint.Y);
+
                     var vector1 = MathHelper.GetVectorPoint(_firstTouchPoint, new Point(_firstTouchPoint.X + 100, _firstTouchPoint.Y));
                     var vector2 = MathHelper.GetVectorPoint(_firstTouchPoint, currentPoint);
                     var cosOfAngle = MathHelper.GetCosOfAngleBetweenVectors(vector1, vector2);
@@ -392,8 +425,8 @@ namespace DragDrop
             {
                 var currentPositionMouse = e.GetTouchPoint(_parentDragDropContainer).Position;
 
-                if (Math.Abs(currentPositionMouse.X - _previousTouchPosition.X) <= 15 &&
-                    Math.Abs(_previousTouchPosition.Y - currentPositionMouse.Y) <= 15)
+                if (Math.Abs(currentPositionMouse.X - _previousTouchPosition.X) <= DragDelta &&
+                    Math.Abs(_previousTouchPosition.Y - currentPositionMouse.Y) <= DragDelta)
                 {
                     e.Handled = true;
                     return;
@@ -511,13 +544,22 @@ namespace DragDrop
             UpdateDragThumbPosition();
             InternalChildren.Add(_dragThumb);
             _isDraggingActive = true;
+
+            //dragStarted execution
+            var dragStartedCommand = DragDropContainer.GetSourceDragStartedCommand(_draggedElement);
+            if(dragStartedCommand!=null)
+                dragStartedCommand.Execute(null);
         }
 
         private async void EndDragDrop()
         {
             if (!_isDraggingActive)
+            {
+                _firstTouchPoint = new Point(0, 0);
+                _firstTouchUIElement = null;
                 return;
-
+            }
+             
             Debug.WriteLine("Drag End");
            
             if (_isTouchActivation)
@@ -533,8 +575,13 @@ namespace DragDrop
 
             _parentDragDropContainer.MouseLeftButtonUp -= _parentDragDropContainer_MouseLeftButtonUp;
 
+            //dragFinished execution
+            var dragFinishedCommand = DragDropContainer.GetSourceDragFinishedCommand(_draggedElement);
 
             await ProceedDropOnCurrentPosition();
+
+            if (dragFinishedCommand != null)
+                dragFinishedCommand.Execute(null);
 
             _dragThumb.Child = null;
             _dragThumb.Background = null;
@@ -544,6 +591,8 @@ namespace DragDrop
 
             _isDraggingActive = false;
             _isDraggTouchGesture = false;
+            _firstTouchPoint = new Point(0, 0);
+            _firstTouchUIElement = null;
         }
 
         private void UpdateElementsInGroup()
@@ -682,109 +731,6 @@ namespace DragDrop
             await Task.Delay(500);
         }
 
-        /// <summary>
-        /// Finds the (nearest) drop target at the current position
-        /// </summary>
-        /// <returns>
-        /// Drop target or null
-        /// </returns>
-        /* private UIElement FindDropTargetAtCurrentPosition()
-        {
-            Point topLeftDraggedElementCorner =
-                _dragThumb.TransformToAncestor(_parentDragDropContainer).Transform(new Point(0, 0));
-            
-            Point bottomRightDraggedElementCorner = new Point(topLeftDraggedElementCorner.X + _dragThumb.ActualWidth,
-                topLeftDraggedElementCorner.Y + _dragThumb.ActualHeight);
-            
-            int draggedElementStartX =
-                (int)Math.Round(Math.Min(topLeftDraggedElementCorner.X, bottomRightDraggedElementCorner.X));
-            
-            int draggedElementStartY =
-                (int)Math.Round(Math.Min(topLeftDraggedElementCorner.Y, bottomRightDraggedElementCorner.Y));
-            
-            int draggedElementWidth =
-                (int)Math.Round(Math.Abs(bottomRightDraggedElementCorner.X - topLeftDraggedElementCorner.X));
-            
-            int draggedElementHeight =
-                (int)Math.Round(Math.Abs(bottomRightDraggedElementCorner.Y - topLeftDraggedElementCorner.Y));
-           
-            Point draggedElementCenter = new Point(topLeftDraggedElementCorner.X + (_dragThumb.ActualWidth / 2d),
-                topLeftDraggedElementCorner.Y + (_dragThumb.ActualHeight / 2d));
-            
-            List<KeyValuePair<double, FrameworkElement>> targets = new List<KeyValuePair<double, FrameworkElement>>();
-          
-            foreach (UIElement groupElement in _groupElements)
-            {
-                if (groupElement == _draggedElement)
-                {
-                    continue;
-                }
-                if (groupElement.IsVisible)
-                {
-                    if (_draggedElement.IsAncestorOf(groupElement))
-                    {
-                        continue;
-                    }
-                    bool isDragActive = DragDropContainer.GetIsDragActive(groupElement);
-                    if (!isDragActive)
-                    {
-                        continue;
-                    }
-                    FrameworkElement groupFrameworkElement = groupElement as FrameworkElement;
-                    if (groupFrameworkElement != null)
-                    {
-                        Point topLeftTargetElementCorner =
-                            groupFrameworkElement.TransformToAncestor(_parentDragDropContainer)
-                                .Transform(new Point(0d, 0d));
-                        Point bottomRightTargetElementCorner =
-                            new Point(topLeftTargetElementCorner.X + groupFrameworkElement.ActualWidth,
-                                topLeftTargetElementCorner.Y + groupFrameworkElement.ActualHeight);
-                        int targetElementStartX =
-                            (int)Math.Round(Math.Min(topLeftTargetElementCorner.X, bottomRightTargetElementCorner.X));
-                        int targetElementStartY =
-                            (int)Math.Round(Math.Min(topLeftTargetElementCorner.Y, bottomRightTargetElementCorner.Y));
-                        int targetElementWidth =
-                            (int)Math.Round(Math.Abs(bottomRightTargetElementCorner.X - topLeftTargetElementCorner.X));
-                        int targetElementHeight =
-                            (int)Math.Round(Math.Abs(bottomRightTargetElementCorner.Y - topLeftTargetElementCorner.Y));
-                        if (
-                            !System.Drawing.Rectangle.Intersect(
-                                new System.Drawing.Rectangle(draggedElementStartX, draggedElementStartY,
-                                    draggedElementWidth, draggedElementHeight),
-                                new System.Drawing.Rectangle(targetElementStartX, targetElementStartY,
-                                    targetElementWidth, targetElementHeight)).IsEmpty)
-                        {
-                            double offsetX =
-                                Math.Abs(draggedElementCenter.X -
-                                         (topLeftTargetElementCorner.X + (groupFrameworkElement.ActualWidth / 2d)));
-                            double offsetY =
-                                Math.Abs(draggedElementCenter.Y -
-                                         (topLeftTargetElementCorner.Y + (groupFrameworkElement.ActualHeight / 2d)));
-                            targets.Add(
-                                new KeyValuePair<double, FrameworkElement>(
-                                    (Math.Sqrt((offsetX * offsetX) + (offsetY * offsetY))), groupFrameworkElement));
-                        }
-                    }
-                }
-            }
-           
-            if (targets.Count > 0)
-            {
-                double nearestDistance = double.MaxValue;
-                FrameworkElement nearestDropTarget = null;
-                foreach (KeyValuePair<double, FrameworkElement> pair in targets)
-                {
-                    if (pair.Key < nearestDistance)
-                    {
-                        nearestDistance = pair.Key;
-                        nearestDropTarget = pair.Value;
-                    }
-                }
-                return nearestDropTarget;
-            }
-            return null;
-        }*/
-
         private UIElement FindDropTargetAtCurrentPosition()
         {
             Point topLeftDraggedElementCorner =
@@ -910,23 +856,11 @@ namespace DragDrop
             return null;
         }
 
-
         /// <summary>
         /// Initializes the drag thumb
         /// </summary>
         private void InitializeDragThumb()
         {
-           /* Binding heightBinding = new Binding();
-            heightBinding.Source = _draggedElement;
-            heightBinding.Path = new PropertyPath("ActualHeight");
-            _dragThumb.SetBinding(Border.HeightProperty, heightBinding);
-         
-            Binding widthBinding = new Binding();
-            widthBinding.Source = _draggedElement;
-            widthBinding.Path = new PropertyPath("ActualWidth");
-            _dragThumb.SetBinding(Border.WidthProperty, widthBinding);
-            _dragThumb.SnapsToDevicePixels = true;*/
-
             //using template
             var template = DragDropContainer.GetDragThumbTemplate(_draggedElement);
             var context = DragDropContainer.GetDragThumbContext(_draggedElement);
@@ -1002,29 +936,6 @@ namespace DragDrop
         {
             UIElement dropTarget = FindDropTargetAtCurrentPosition();
 
-            if (dropTarget != null)
-            {
-                bool previousValue = DragDropContainer.GetIsActiveDropTarget(dropTarget);
-
-                if (!previousValue && _draggedElement!=null)
-                {
-                    SourceReachTargetCommand sourceReachTargetCommand =
-                        DragDropContainer.GetSourceReachTargetCommand(dropTarget);
-                    object sourceReachTargetCommandParameter =
-                        DragDropContainer.GetSourceReachCommandParameter(_draggedElement);
-                   
-                    if (sourceReachTargetCommand != null)
-                    {
-                        sourceReachTargetCommand.Execute(this,
-                            new SourceReachTargetCommandParameter(_draggedElement, dropTarget,
-                                sourceReachTargetCommandParameter, null));
-                    }
-
-                    DragDropContainer.SetIsActiveDropTarget(dropTarget, true);
-                }
-
-            }
-
             foreach (UIElement groupElement in _groupElements)
             {
                 if (groupElement != dropTarget)
@@ -1048,6 +959,29 @@ namespace DragDrop
                         DragDropContainer.SetIsActiveDropTarget(groupElement, false);
                     }
                 }
+            }
+
+            if (dropTarget != null)
+            {
+                bool previousValue = DragDropContainer.GetIsActiveDropTarget(dropTarget);
+
+                if (!previousValue && _draggedElement != null)
+                {
+                    SourceReachTargetCommand sourceReachTargetCommand =
+                        DragDropContainer.GetSourceReachTargetCommand(dropTarget);
+                    object sourceReachTargetCommandParameter =
+                        DragDropContainer.GetSourceReachCommandParameter(_draggedElement);
+
+                    if (sourceReachTargetCommand != null)
+                    {
+                        sourceReachTargetCommand.Execute(this,
+                            new SourceReachTargetCommandParameter(_draggedElement, dropTarget,
+                                sourceReachTargetCommandParameter, null));
+                    }
+
+                    DragDropContainer.SetIsActiveDropTarget(dropTarget, true);
+                }
+
             }
         }
         #endregion
