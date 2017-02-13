@@ -9,7 +9,6 @@ using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
-using System.Windows.Shapes;
 using DragDrop.Commands;
 using DragDrop.Commands.Parameters;
 
@@ -597,8 +596,9 @@ namespace DragDrop
 
         private void UpdateElementsInGroup()
         {
-            foreach (UIElement groupElement in _groupElements)
+            for (int i = 0; i < _groupElements.Count; i++)
             {
+                var groupElement = _groupElements[i];
                 DropCommand sourceDropCommand = DragDropContainer.GetSourceDropCommand(_draggedElement);
                 object sourceDropCommandParameter = DragDropContainer.GetSourceDropCommandParameter(_draggedElement);
                 DropCommand targetDropCommand = DragDropContainer.GetTargetDropCommand(groupElement);
@@ -630,8 +630,9 @@ namespace DragDrop
             UIElement targetElement = FindDropTargetAtCurrentPosition();
 
             //reset properties and commands
-            foreach (UIElement groupElement in _groupElements)
+            for (int i = 0; i < _groupElements.Count; i++)
             {
+                var groupElement = _groupElements[i];
                 DragDropContainer.SetIsDragActive(groupElement, false);
 
                 bool previousValue = DragDropContainer.GetIsActiveDropTarget(groupElement);
@@ -756,8 +757,9 @@ namespace DragDrop
 
             List<KeyValuePair<double, FrameworkElement>> targets = new List<KeyValuePair<double, FrameworkElement>>();
 
-            foreach (UIElement groupElement in _groupElements)
+            for (int i = 0; i < _groupElements.Count; i++)
             {
+                var groupElement = _groupElements[i];
                 if (groupElement == _draggedElement)
                 {
                     continue;
@@ -769,8 +771,8 @@ namespace DragDrop
                         continue;
                     }
 
-                    bool isDragActive = DragDropContainer.GetIsDragActive(groupElement);
-                    if (!isDragActive)
+                    bool isDropTarget = DragDropContainer.GetIsDropTarget(groupElement);
+                    if (!isDropTarget)
                     {
                         continue;
                     }
@@ -831,8 +833,6 @@ namespace DragDrop
                                 }
                                 break;
                         }
-
-                       
                     }
                 }
             }
@@ -936,8 +936,9 @@ namespace DragDrop
         {
             UIElement dropTarget = FindDropTargetAtCurrentPosition();
 
-            foreach (UIElement groupElement in _groupElements)
+            for(int i=0; i< _groupElements.Count; i++)
             {
+                var groupElement = _groupElements[i];
                 if (groupElement != dropTarget)
                 {
                     bool previousValue = DragDropContainer.GetIsActiveDropTarget(groupElement);
