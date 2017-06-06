@@ -83,6 +83,16 @@ namespace DragDrop
             obj.SetValue(SourceDragStartedCommandProperty, value);
         }
 
+        static public readonly DependencyProperty SourceDragStartedCommandParameterProperty = DependencyProperty.RegisterAttached("SourceDragStartedCommandParameter", typeof(object), typeof(DragDropContainer), new UIPropertyMetadata(null));
+        static public object GetSourceDragStartedCommandParameterProperty(DependencyObject obj)
+        {
+            return (object)obj.GetValue(SourceDragStartedCommandParameterProperty);
+        }
+        static public void SetSourceDragStartedCommandParameterProperty(DependencyObject obj, object value)
+        {
+            obj.SetValue(SourceDragStartedCommandParameterProperty, value);
+        }
+
         static public readonly DependencyProperty SourceDragFinishedCommandProperty = DependencyProperty.RegisterAttached("SourceDragFinishedCommand", typeof(ICommand), typeof(DragDropContainer), new UIPropertyMetadata(null));
         static public ICommand GetSourceDragFinishedCommand(DependencyObject obj)
         {
@@ -93,6 +103,17 @@ namespace DragDrop
             obj.SetValue(SourceDragFinishedCommandProperty, value);
         }
 
+
+
+        static public readonly DependencyProperty SourceDragFinishedCommandParameterProperty = DependencyProperty.RegisterAttached("SourceDragFinishedCommandParameter", typeof(object), typeof(DragDropContainer), new UIPropertyMetadata(null));
+        static public object GetSourceDragFinishedCommandParameterProperty(DependencyObject obj)
+        {
+            return (object)obj.GetValue(SourceDragFinishedCommandParameterProperty);
+        }
+        static public void SetSourceDragFinishedCommandParameterProperty(DependencyObject obj, object value)
+        {
+            obj.SetValue(SourceDragFinishedCommandParameterProperty, value);
+        }
 
         static public readonly DependencyProperty SourceDropCommandProperty = DependencyProperty.RegisterAttached("SourceDropCommand", typeof(DropCommand), typeof(DragDropContainer), new UIPropertyMetadata(null));
         static public DropCommand GetSourceDropCommand(DependencyObject obj)

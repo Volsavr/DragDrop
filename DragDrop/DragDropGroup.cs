@@ -545,9 +545,10 @@ namespace DragDrop
             _isDraggingActive = true;
 
             //dragStarted execution
+            var dragStartedCommandParameter = DragDropContainer.GetSourceDragStartedCommandParameterProperty(_draggedElement);
             var dragStartedCommand = DragDropContainer.GetSourceDragStartedCommand(_draggedElement);
             if(dragStartedCommand!=null)
-                dragStartedCommand.Execute(null);
+                dragStartedCommand.Execute(dragStartedCommandParameter);
         }
 
         private async void EndDragDrop()
@@ -575,12 +576,13 @@ namespace DragDrop
             _parentDragDropContainer.MouseLeftButtonUp -= _parentDragDropContainer_MouseLeftButtonUp;
 
             //dragFinished execution
+            var dragFinishedCommandParameter = DragDropContainer.GetSourceDragFinishedCommandParameterProperty(_draggedElement);
             var dragFinishedCommand = DragDropContainer.GetSourceDragFinishedCommand(_draggedElement);
 
             await ProceedDropOnCurrentPosition();
 
             if (dragFinishedCommand != null)
-                dragFinishedCommand.Execute(null);
+                dragFinishedCommand.Execute(dragFinishedCommandParameter);
 
             _dragThumb.Child = null;
             _dragThumb.Background = null;
