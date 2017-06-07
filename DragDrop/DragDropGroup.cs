@@ -545,7 +545,7 @@ namespace DragDrop
             _isDraggingActive = true;
 
             //dragStarted execution
-            var dragStartedCommandParameter = DragDropContainer.GetSourceDragStartedCommandParameterProperty(_draggedElement);
+            var dragStartedCommandParameter = DragDropContainer.GetSourceDragStartedCommandParameter(_draggedElement);
             var dragStartedCommand = DragDropContainer.GetSourceDragStartedCommand(_draggedElement);
             if(dragStartedCommand!=null)
                 dragStartedCommand.Execute(dragStartedCommandParameter);
@@ -576,7 +576,7 @@ namespace DragDrop
             _parentDragDropContainer.MouseLeftButtonUp -= _parentDragDropContainer_MouseLeftButtonUp;
 
             //dragFinished execution
-            var dragFinishedCommandParameter = DragDropContainer.GetSourceDragFinishedCommandParameterProperty(_draggedElement);
+            var dragFinishedCommandParameter = DragDropContainer.GetSourceDragFinishedCommandParameter(_draggedElement);
             var dragFinishedCommand = DragDropContainer.GetSourceDragFinishedCommand(_draggedElement);
 
             await ProceedDropOnCurrentPosition();

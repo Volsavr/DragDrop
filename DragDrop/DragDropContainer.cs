@@ -84,11 +84,11 @@ namespace DragDrop
         }
 
         static public readonly DependencyProperty SourceDragStartedCommandParameterProperty = DependencyProperty.RegisterAttached("SourceDragStartedCommandParameter", typeof(object), typeof(DragDropContainer), new UIPropertyMetadata(null));
-        static public object GetSourceDragStartedCommandParameterProperty(DependencyObject obj)
+        static public object GetSourceDragStartedCommandParameter(DependencyObject obj)
         {
             return (object)obj.GetValue(SourceDragStartedCommandParameterProperty);
         }
-        static public void SetSourceDragStartedCommandParameterProperty(DependencyObject obj, object value)
+        static public void SetSourceDragStartedCommandParameter(DependencyObject obj, object value)
         {
             obj.SetValue(SourceDragStartedCommandParameterProperty, value);
         }
@@ -104,13 +104,12 @@ namespace DragDrop
         }
 
 
-
         static public readonly DependencyProperty SourceDragFinishedCommandParameterProperty = DependencyProperty.RegisterAttached("SourceDragFinishedCommandParameter", typeof(object), typeof(DragDropContainer), new UIPropertyMetadata(null));
-        static public object GetSourceDragFinishedCommandParameterProperty(DependencyObject obj)
+        static public object GetSourceDragFinishedCommandParameter(DependencyObject obj)
         {
             return (object)obj.GetValue(SourceDragFinishedCommandParameterProperty);
         }
-        static public void SetSourceDragFinishedCommandParameterProperty(DependencyObject obj, object value)
+        static public void SetSourceDragFinishedCommandParameter(DependencyObject obj, object value)
         {
             obj.SetValue(SourceDragFinishedCommandParameterProperty, value);
         }
