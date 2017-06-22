@@ -182,6 +182,7 @@ namespace DragDrop
         {
             //mouse events
             groupElement.MouseMove -= groupElement_MouseMove;
+            groupElement.MouseLeftButtonDown -= groupElement_MouseLeftButtonDown;
 
             //touch events
             groupElement.StylusSystemGesture -= groupElement_StylusSystemGesture;
@@ -532,7 +533,6 @@ namespace DragDrop
             }
             else
             {
-               // _parentDragDropContainer.MouseEnter += _parentDragDropContainer_MouseEnter;
                 _parentDragDropContainer.MouseMove += _parentDragDropContainer_MouseMove;
             }
 
@@ -569,7 +569,6 @@ namespace DragDrop
             }
             else
             {
-                //_parentDragDropContainer.MouseEnter -= _parentDragDropContainer_MouseEnter;
                 _parentDragDropContainer.MouseMove -= _parentDragDropContainer_MouseMove;
             }
 
@@ -984,7 +983,6 @@ namespace DragDrop
 
                     DragDropContainer.SetIsActiveDropTarget(dropTarget, true);
                 }
-
             }
         }
         #endregion

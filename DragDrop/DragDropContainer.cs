@@ -259,6 +259,22 @@ namespace DragDrop
         #endregion attached properties
 
         #region Static Methods
+        static private void UnsubscribeEvents(FrameworkElement groupElement)
+        {
+            groupElement.IsVisibleChanged -= groupElement_IsVisibleChanged;
+        }
+
+        static private void SubscribeEvents(FrameworkElement groupElement)
+        {
+            groupElement.IsVisibleChanged += groupElement_IsVisibleChanged;
+
+            WeakEventManager<FrameworkElement, RoutedEventArgs>.RemoveHandler(groupElement, "Unloaded", groupElement_Unloaded);
+            WeakEventManager<FrameworkElement, RoutedEventArgs>.RemoveHandler(groupElement, "Loaded", groupElement_Loaded);
+
+            WeakEventManager<FrameworkElement, RoutedEventArgs>.AddHandler(groupElement, "Unloaded", groupElement_Unloaded);
+            WeakEventManager<FrameworkElement, RoutedEventArgs>.AddHandler(groupElement, "Loaded", groupElement_Loaded);
+        }
+
         /// <summary>
         /// Handles the "Changed" event of the "DragDropGroupName" attached
         /// property
@@ -272,52 +288,46 @@ namespace DragDrop
         static private void OnDragDropGroupNameChanged(DependencyObject sender, DependencyPropertyChangedEventArgs args)
         {
             FrameworkElement groupElement = sender as FrameworkElement;
-            if (groupElement != null)
+            if (groupElement == null)
+                return;
+
+            if (groupElement.IsLoaded)
             {
-                if (groupElement.IsLoaded)
+                DragDropContainer dragDropContainer = FindParent<DragDropContainer>(groupElement);
+                if (dragDropContainer != null)
                 {
-                    DragDropContainer dragDropContainer = FindParent<DragDropContainer>(groupElement);
-                    if (dragDropContainer != null)
-                    {
-                        SetParentDragDropContainer(groupElement, dragDropContainer);
-                        dragDropContainer.OnDragDropGroupNameChanged(groupElement, args.OldValue as string, args.NewValue as string);
-                    }
-                    groupElement.Unloaded -= new RoutedEventHandler(groupElement_Unloaded);
-                    groupElement.Loaded -= new RoutedEventHandler(groupElement_Loaded);
-                    groupElement.Unloaded += new RoutedEventHandler(groupElement_Unloaded);
-                    groupElement.IsVisibleChanged -= groupElement_IsVisibleChanged;
-                    groupElement.IsVisibleChanged += groupElement_IsVisibleChanged;
-                }
-                else
-                {
-                    groupElement.Unloaded -= new RoutedEventHandler(groupElement_Unloaded);
-                    groupElement.Loaded -= new RoutedEventHandler(groupElement_Loaded);
-                    groupElement.IsVisibleChanged -= groupElement_IsVisibleChanged;
-                    groupElement.Loaded += new RoutedEventHandler(groupElement_Loaded);
+                    SetParentDragDropContainer(groupElement, dragDropContainer);
+                    dragDropContainer.OnDragDropGroupNameChanged(groupElement, args.OldValue as string, args.NewValue as string);
                 }
             }
+
+            UnsubscribeEvents(groupElement);
+            SubscribeEvents(groupElement);
         }
 
         static void groupElement_IsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)
         {
             FrameworkElement groupElement = sender as FrameworkElement;
-            if (groupElement != null)
+            if (groupElement == null)
+                return;
+
+            DragDropContainer dragDropContainer = FindParent<DragDropContainer>(groupElement);
+
+            if (dragDropContainer == null)
+                dragDropContainer = GetParentDragDropContainer(groupElement);
+
+            if (dragDropContainer == null)
+                return;
+
+            string oldGroupName = groupElement.IsVisible? null: GetDragDropGroupName(groupElement);
+            string newGroupName = groupElement.IsVisible? GetDragDropGroupName(groupElement): null;
+
+            if (groupElement.IsVisible)
             {
-                DragDropContainer dragDropContainer = FindParent<DragDropContainer>(groupElement);
-                if (dragDropContainer != null)
-                {
-                    if (groupElement.IsVisible)
-                    {
-                        SetParentDragDropContainer(groupElement, dragDropContainer);
-                        dragDropContainer.OnDragDropGroupNameChanged(groupElement, null,
-                            GetDragDropGroupName(groupElement));
-                    }
-                    else
-                    {
-                        dragDropContainer.OnDragDropGroupNameChanged(groupElement, GetDragDropGroupName(groupElement), null);
-                    }
-                }
+                SetParentDragDropContainer(groupElement, dragDropContainer);
             }
+
+            dragDropContainer.OnDragDropGroupNameChanged(groupElement, oldGroupName, newGroupName);
         }
 
         /// <summary>
@@ -332,20 +342,22 @@ namespace DragDrop
         public static void groupElement_Loaded(object sender, RoutedEventArgs args)
         {
             FrameworkElement groupElement = sender as FrameworkElement;
-            if (groupElement != null)
+            if (groupElement == null)
+                return;
+
+            DragDropContainer dragDropContainer = FindParent<DragDropContainer>(groupElement);
+
+            if (dragDropContainer == null)
+                dragDropContainer = GetParentDragDropContainer(groupElement);
+
+            if (dragDropContainer != null && args != null)
             {
-                DragDropContainer dragDropContainer = FindParent<DragDropContainer>(groupElement);
-                if (dragDropContainer != null && args != null)
-                {
-                    SetParentDragDropContainer(groupElement, dragDropContainer);
-                    dragDropContainer.OnDragDropGroupNameChanged(groupElement, null, GetDragDropGroupName(groupElement));
-                }
-                groupElement.Unloaded -= new RoutedEventHandler(groupElement_Unloaded);
-                groupElement.Loaded -= new RoutedEventHandler(groupElement_Loaded);
-                groupElement.Unloaded += new RoutedEventHandler(groupElement_Unloaded);
-                groupElement.IsVisibleChanged -= groupElement_IsVisibleChanged;
-                groupElement.IsVisibleChanged += groupElement_IsVisibleChanged;
+                SetParentDragDropContainer(groupElement, dragDropContainer);
+                dragDropContainer.OnDragDropGroupNameChanged(groupElement, null, GetDragDropGroupName(groupElement));
             }
+
+            UnsubscribeEvents(groupElement);
+            SubscribeEvents(groupElement);
         }
 
         /// <summary>
@@ -360,19 +372,20 @@ namespace DragDrop
         static private void groupElement_Unloaded(object sender, RoutedEventArgs args)
         {
             FrameworkElement groupElement = sender as FrameworkElement;
+            if (groupElement == null)
+                return;
 
-            if (groupElement != null)
+            DragDropContainer dragDropContainer = FindParent<DragDropContainer>(groupElement);
+
+            if (dragDropContainer == null)
+                dragDropContainer = GetParentDragDropContainer(groupElement);
+
+            if (dragDropContainer != null && args != null)
             {
-                DragDropContainer dragDropContainer = FindParent<DragDropContainer>(groupElement);
-                if (dragDropContainer != null && args != null)
-                {
-                    dragDropContainer.OnDragDropGroupNameChanged(groupElement, GetDragDropGroupName(groupElement), null);
-                }
-                groupElement.Unloaded -= new RoutedEventHandler(groupElement_Unloaded);
-                groupElement.Loaded -= new RoutedEventHandler(groupElement_Loaded);
-                groupElement.IsVisibleChanged -= groupElement_IsVisibleChanged;
-                groupElement.Loaded += new RoutedEventHandler(groupElement_Loaded);
+                dragDropContainer.OnDragDropGroupNameChanged(groupElement, GetDragDropGroupName(groupElement), null);
             }
+
+            UnsubscribeEvents(groupElement);
         }
 
         /// <summary>
@@ -390,35 +403,34 @@ namespace DragDrop
         /// </param>
         private void OnDragDropGroupNameChanged(FrameworkElement groupElement, string oldDragDropGroupName, string newDragDropGroupName)
         {
-            if (groupElement != null)
+            if (groupElement == null)
+                return;
+
+            if (!string.IsNullOrEmpty(oldDragDropGroupName))
             {
-                if (!string.IsNullOrEmpty(oldDragDropGroupName))
+                IDragDropGroup dragDropGroup = FindDragDropGroup(oldDragDropGroupName);
+                if (dragDropGroup != null)
                 {
-                    IDragDropGroup dragDropGroup = FindDragDropGroup(oldDragDropGroupName);
-                    if (dragDropGroup != null)
+                    dragDropGroup.RemoveGroupElement(groupElement);
+                    if (!dragDropGroup.HasGroupElements)
                     {
-                        dragDropGroup.RemoveGroupElement(groupElement);
-                        if (!dragDropGroup.HasGroupElements)
-                        {
-                            InternalChildren.Remove(dragDropGroup as UIElement);
-                        }
+                        InternalChildren.Remove(dragDropGroup as UIElement);
                     }
                 }
-                if (!string.IsNullOrEmpty(newDragDropGroupName))
+            }
+
+            if (!string.IsNullOrEmpty(newDragDropGroupName))
+            {
+                IDragDropGroup dragDropGroup = FindDragDropGroup(newDragDropGroupName);
+
+                if(dragDropGroup == null)
                 {
-                    IDragDropGroup dragDropGroup = FindDragDropGroup(newDragDropGroupName);
-                    if (dragDropGroup != null)
-                    {
-                        dragDropGroup.AddGroupElement(groupElement);
-                    }
-                    else
-                    {
-                        dragDropGroup = new DragDropGroup(this);
-                        dragDropGroup.DragDropGroupName = newDragDropGroupName;
-                        dragDropGroup.AddGroupElement(groupElement);
-                        InternalChildren.Add(dragDropGroup as UIElement);
-                    }
+                    dragDropGroup = new DragDropGroup(this);
+                    dragDropGroup.DragDropGroupName = newDragDropGroupName;
+                    InternalChildren.Add(dragDropGroup as UIElement);
                 }
+
+               dragDropGroup.AddGroupElement(groupElement);
             }
         }
 
