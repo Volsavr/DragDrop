@@ -256,6 +256,16 @@ namespace DragDrop
         {
             obj.SetValue(MaxDragAngleProperty, value);
         }
+
+        static public readonly DependencyProperty EnableInvertedDragAngleSegmentProperty = DependencyProperty.RegisterAttached("EnableInvertedDragAngleSegment", typeof(bool), typeof(DragDropContainer), new UIPropertyMetadata(false));
+        static public bool GetEnableInvertedDragAngleSegment(DependencyObject obj)
+        {
+            return (bool)obj.GetValue(EnableInvertedDragAngleSegmentProperty);
+        }
+        static public void SetEnableInvertedDragAngleSegment(DependencyObject obj, bool value)
+        {
+            obj.SetValue(EnableInvertedDragAngleSegmentProperty, value);
+        }
         #endregion attached properties
 
         #region Static Methods

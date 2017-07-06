@@ -65,6 +65,7 @@
     <Compile Include="Commands\Delegates\DropCommandCanExecuteDelegate.cs" />
     <Compile Include="Commands\Delegates\DropCommandExecutedDelegate.cs" />
     <Compile Include="Commands\Parameters\DropCommandParameter.cs" />
+    <Compile Include="Helpers\DragAngleSegment.cs" />
     <Compile Include="IDragDropGroup.cs" />
     <Compile Include="CollisionHelper.cs" />
     <Compile Include="MathHelper.cs" />

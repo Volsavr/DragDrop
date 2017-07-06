@@ -11,6 +11,7 @@ using System.Windows.Media;
 using System.Windows.Media.Animation;
 using DragDrop.Commands;
 using DragDrop.Commands.Parameters;
+using DragDrop.Helpers;
 
 namespace DragDrop
 {
@@ -353,14 +354,19 @@ namespace DragDrop
 
             var minAngle = DragDropContainer.GetMinDragAngle(_firstTouchUIElement);
             var maxAngle = DragDropContainer.GetMaxDragAngle(_firstTouchUIElement);
+            var isEnableInvertedDragAngleSegment = DragDropContainer.GetEnableInvertedDragAngleSegment(_firstTouchUIElement);
 
             Debug.WriteLine("Angle:" + angle);
             Debug.WriteLine("MinAngle:" + minAngle);
             Debug.WriteLine("MaxAngle:" + maxAngle);
+            Debug.WriteLine("Inverted segment:" + isEnableInvertedDragAngleSegment);
 
-            if (angle < minAngle || angle > maxAngle)
-                return;
+            var segment = new DragAngleSegment(minAngle, maxAngle, isEnableInvertedDragAngleSegment);
 
+            //check drag angle
+            if (!segment.Contains(angle))
+               return;
+            
             Debug.WriteLine("Gesture: Mouse Drag");
             if (TrySetDraggedElement(_firstTouchUIElement))
             {
@@ -395,15 +401,20 @@ namespace DragDrop
                     if (currentPoint.Y < _firstTouchPoint.Y)
                         angle = 360 - angle;
 
-                    var minAngle = DragDropContainer.GetMinDragAngle(sender as UIElement);
-                    var maxAngle = DragDropContainer.GetMaxDragAngle(sender as UIElement);
+                    var minAngle = DragDropContainer.GetMinDragAngle(_firstTouchUIElement);
+                    var maxAngle = DragDropContainer.GetMaxDragAngle(_firstTouchUIElement);
+                    var isEnableInvertedDragAngleSegment = DragDropContainer.GetEnableInvertedDragAngleSegment(_firstTouchUIElement);
 
                     Debug.WriteLine("Angle:" + angle);
                     Debug.WriteLine("MinAngle:" + minAngle);
                     Debug.WriteLine("MaxAngle:" + maxAngle);
+                    Debug.WriteLine("Inverted segment:" + isEnableInvertedDragAngleSegment);
 
-                    if (angle < minAngle || angle > maxAngle)
-                        return;
+                    var segment = new DragAngleSegment(minAngle, maxAngle, isEnableInvertedDragAngleSegment);
+
+                    //check drag angle
+                    if (!segment.Contains(angle))
+                       return;
 
                     if (TrySetDraggedElement(sender as UIElement))
                     {
