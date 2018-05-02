@@ -6,3 +6,5 @@ DragDrop/bin/
 .vs/DragDrop/v14/.suo
 DragDrop.v12.suo
 packages/
+.vs/
+DragDrop/DragDrop.csproj.user

@@ -431,41 +431,39 @@ namespace DragDrop
 
         private void _parentDragDropContainer_TouchMove(object sender, TouchEventArgs e)
         {
-            FrameworkElement draggedFrameworkElement = _draggedElement as FrameworkElement;
-            if (draggedFrameworkElement != null)
+            if (!_isDraggingActive)
+                return;
+
+            var currentPositionMouse = e.GetTouchPoint(_parentDragDropContainer).Position;
+
+            if (Math.Abs(currentPositionMouse.X - _previousTouchPosition.X) <= DragDelta &&
+                Math.Abs(_previousTouchPosition.Y - currentPositionMouse.Y) <= DragDelta)
             {
-                var currentPositionMouse = e.GetTouchPoint(_parentDragDropContainer).Position;
-
-                if (Math.Abs(currentPositionMouse.X - _previousTouchPosition.X) <= DragDelta &&
-                    Math.Abs(_previousTouchPosition.Y - currentPositionMouse.Y) <= DragDelta)
-                {
-                    e.Handled = true;
-                    return;
-                }
-
-                _previousTouchPosition = currentPositionMouse;
-
-                Debug.WriteLine("CureentPoint = x: {0}; Y: {1}", currentPositionMouse.X, currentPositionMouse.Y);
-
-                ((_dragThumb.RenderTransform as TransformGroup).Children[0] as TranslateTransform).X =
-                    currentPositionMouse.X - draggedFrameworkElement.ActualWidth / 2;
-                ((_dragThumb.RenderTransform as TransformGroup).Children[0] as TranslateTransform).Y =
-                    currentPositionMouse.Y - draggedFrameworkElement.ActualHeight / 2;
+                e.Handled = true;
+                return;
             }
+
+            _previousTouchPosition = currentPositionMouse;
+            UpdateDragThumbPosition(currentPositionMouse);
 
             UpdateDragDropTargets();
             e.Handled = true;
-
         }
 
         private void _parentDragDropContainer_MouseMove(object sender, MouseEventArgs args)
         {
+            if (!_isDraggingActive)
+                return;
+
             Debug.WriteLine("DragDropGroup_MouseMove");
 
             if (!_isTouchActivation)
             {
-                UpdateDragThumbPosition();
+                Point currentPosition = args.GetPosition(_parentDragDropContainer); 
+                UpdateDragThumbPosition(currentPosition);
+
                 UpdateDragDropTargets();
+                args.Handled = true;
             }
         }
 
@@ -476,7 +474,7 @@ namespace DragDrop
             {
                 InternalChildren.Remove(_dragThumb);
                 _parentDragDropContainer.PreviewMouseLeftButtonUp -= _parentDragDropContainer_MouseLeftButtonUp;
-                _parentDragDropContainer.MouseMove -= _parentDragDropContainer_MouseMove;
+                 _parentDragDropContainer.MouseMove -= _parentDragDropContainer_MouseMove;
                 _parentDragDropContainer.MouseEnter -= _parentDragDropContainer_MouseEnter;
                 _draggedElement.RenderTransform = _originalTransform;
                 foreach (UIElement groupElement in _groupElements)
@@ -549,10 +547,17 @@ namespace DragDrop
 
             _parentDragDropContainer.MouseLeftButtonUp += _parentDragDropContainer_MouseLeftButtonUp;
 
+            //init thumb
             InitializeDragThumb();
 
-            UpdateDragThumbPosition();
+            //update thumb position
+            var position = Mouse.GetPosition(_parentDragDropContainer);
+            UpdateDragThumbPosition(position);
+
+            //add thumb to childrens
             InternalChildren.Add(_dragThumb);
+
+            //set draggng flag
             _isDraggingActive = true;
 
             //dragStarted execution
@@ -929,24 +934,26 @@ namespace DragDrop
         /// <summary>
         /// Updates the drag thumb position
         /// </summary>
-        private void UpdateDragThumbPosition()
+        private void UpdateDragThumbPosition(Point newPosition)
         {
             FrameworkElement draggedFrameworkElement = _draggedElement as FrameworkElement;
             if (draggedFrameworkElement != null)
             {
-                Point currentPosition = Mouse.GetPosition(_parentDragDropContainer);
-                Debug.WriteLine("CureentPoint = x: {0}; Y: {1}", currentPosition.X, currentPosition.Y);
+                Debug.WriteLine("New position = x: {0}; Y: {1}", newPosition.X, newPosition.Y);
 
                 ((_dragThumb.RenderTransform as TransformGroup).Children[0] as TranslateTransform).X =
-                    currentPosition.X - draggedFrameworkElement.ActualWidth / 2;
+                    newPosition.X - draggedFrameworkElement.ActualWidth / 2;
                 ((_dragThumb.RenderTransform as TransformGroup).Children[0] as TranslateTransform).Y =
-                    currentPosition.Y - draggedFrameworkElement.ActualHeight / 2;
+                    newPosition.Y - draggedFrameworkElement.ActualHeight / 2;
             }
         }
 
         private void UpdateDragDropTargets()
         {
             UIElement dropTarget = FindDropTargetAtCurrentPosition();
+
+            if (dropTarget == null)
+                return;
 
             for(int i=0; i< _groupElements.Count; i++)
             {
