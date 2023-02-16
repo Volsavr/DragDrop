@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Windows;
 
-namespace DragDrop
+namespace DragDrop.Helpers
 {
     internal static class MathHelper
     {
@@ -22,7 +22,7 @@ namespace DragDrop
 
         internal static double RadiansToGradus(double radians)
         {
-            return radians*180/Math.PI;
+            return radians * 180 / Math.PI;
         }
     }
 }
