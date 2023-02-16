@@ -1,0 +1,27 @@
+name: CI
+
+on:
+ workflow_dispatch:
+ push:
+ pull_request:
+  branches: [ main ]
+
+# This section contains all the jobs to be run.
+jobs:
+ build:
+  runs-on: windows-2019
+  steps:
+   # Checks out the source code at the latest commit
+   - uses: actions/checkout@v2
+   # Setup nuget
+   - name: Setup NuGet
+     uses: NuGet/setup-nuget@v1.0.5
+   # Installs msbuild
+   - name: setup-msbuild
+     uses: microsoft/setup-msbuild@v1.1
+   # Installs any NuGet packages required
+   - name: Install dependencies
+     run: nuget restore DragDrop.sln
+   # Builds the project
+   - name: Build
+     run: msbuild DragDrop.sln -t:rebuild -property:Configuration=Release
