@@ -46,11 +46,11 @@ Declare drag drop target (Ellipse is used for demonstration purposes):
          dragDrop:DragDropContainer.TargetDropCommand="{Binding ItemDropCommand}"/>
 ```
 **Where:**
-`SourceReachTargetCommand` - the command that is executed when the source element of the drag reaches the target element
-`SourceLeaveTargetCommand` - the command that is executed when the source element of the drag leaves the target element
-`TargetDropCommand` - the command that is executed when customer drops source element on the target element
+- `SourceReachTargetCommand` - the command that is executed when the source element of the drag reaches the target element
+- `SourceLeaveTargetCommand` - the command that is executed when the source element of the drag leaves the target element
+- `TargetDropCommand` - the command that is executed when customer drops source element on the target element
 
 **Additional settings:**
-`DragThumbTemplate, DragThumbContext` - allow to customize ui of dragged element
-`MinDragAngle, MaxDragAngle` - allow to specify settings for drag start operation
-`TargetCollisionMode` - allows specify intersection method
+- `DragThumbTemplate, DragThumbContext` - allow to customize ui of dragged element
+- `MinDragAngle, MaxDragAngle` - allow to specify settings for drag start operation
+- `TargetCollisionMode` - allows specify intersection method
